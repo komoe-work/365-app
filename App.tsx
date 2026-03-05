@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { AudioGuide } from './types';
-import { fetchCommunityProgress } from './services/supabase';
 
 /**
  * AUDIO LINK SYSTEM
@@ -44,22 +43,13 @@ const PATRON_WEBSITE_URL = "https://dhammalann.mindset-it.online/";
 
 type Language = 'my' | 'en';
 
-interface CommunityEntry {
-  student_id: string;
-  date: string;
-  progress_percent: number;
-  updated_at: string;
-}
-
 const App: React.FC = () => {
   const [lang, setLang] = useState<Language>(() => (localStorage.getItem(LANG_KEY) as Language) || 'my');
   const [audioGuides, setAudioGuides] = useState<AudioGuide[]>(INITIAL_AUDIO);
-  const [communityData, setCommunityData] = useState<CommunityEntry[]>([]);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [selectedAudio, setSelectedAudio] = useState<AudioGuide | null>(null);
   
   const [hasScrolled, setHasScrolled] = useState(false);
-  const [showCommunity, setShowCommunity] = useState(false);
 
   const todayDate = new Date().toISOString().split('T')[0];
 
@@ -149,7 +139,6 @@ const App: React.FC = () => {
 
   useEffect(() => {
     loadInitialData();
-    loadCommunity();
   }, []);
 
   const formatDate = (dateStr: string) => {
@@ -171,11 +160,6 @@ const App: React.FC = () => {
         setAudioGuides(parsed.audioGuides || INITIAL_AUDIO);
       }
     }
-  };
-
-  const loadCommunity = async () => {
-    const data = await fetchCommunityProgress();
-    setCommunityData(data);
   };
 
   const saveAndSync = async (updatedAudio: AudioGuide[]) => {
@@ -204,10 +188,6 @@ const App: React.FC = () => {
 
   const t = {
     titleEn: "365 Days Vipassana Training",
-    communityTitle: lang === 'my' ? "ဓမ္မမိတ်ဆွေများ၏ လေ့ကျင့်မှု" : "Community Journey",
-    communitySubtitle: lang === 'my' ? "တူညီသောလမ်းစဉ်တွင် လျှောက်လှမ်းနေသူများ" : "Practicing together on the path",
-    showCommunityBtn: lang === 'my' ? "ဓမ္မမိတ်ဆွေများ၏ လေ့ကျင့်မှု ကြည့်ရန်" : "View Community Journey",
-    hideCommunityBtn: lang === 'my' ? "ဓမ္မမိတ်ဆွေများ၏ လေ့ကျင့်မှု သိမ်းရန်" : "Hide Community Journey",
     audioTitle: lang === 'my' ? "တရားတော်များ နာယူရန်" : "Audio Sanctuary",
     audioSubtitle: lang === 'my' ? "တစ်နှစ်တာ နေ့စဉ် နာယူရန်" : "365 Days Journey",
     googleSheet: lang === 'my' ? "Google Sheet ကြည့်ရန်" : "View Google Sheet",
@@ -315,51 +295,6 @@ const App: React.FC = () => {
           </div>
         </div>
       </section>
-      {/* Community Toggle */}
-      <section className="mb-8 flex justify-center fade-content">
-        <button 
-          onClick={() => setShowCommunity(!showCommunity)}
-          className={`px-6 py-3 rounded-xl font-bold text-[10px] uppercase tracking-wider shadow-md transition-all active-scale flex items-center gap-2 ${showCommunity ? 'bg-white text-teal-900 border border-teal-100' : 'bg-teal-900/20 text-teal-900 hover:bg-teal-900/30'}`}
-        >
-          {showCommunity ? t.hideCommunityBtn : t.showCommunityBtn}
-          <svg className={`w-3 h-3 transition-transform duration-300 ${showCommunity ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"/>
-          </svg>
-        </button>
-      </section>
-
-      {/* Community Inspiration Board */}
-      {showCommunity && (
-        <section className="mb-10 fade-content">
-          <div className="flex items-center justify-between mb-4 px-2">
-            <div>
-              <h2 className="text-lg font-bold gold-text flex items-center gap-2">
-                <span className="w-1.5 h-5 bg-[#B8860B] rounded-full"></span>
-                {t.communityTitle}
-              </h2>
-              <p className="text-[10px] text-teal-100/70 italic font-bold uppercase tracking-wider">{t.communitySubtitle}</p>
-            </div>
-            <button onClick={loadCommunity} className="p-2 text-teal-100/20 hover:text-[#FCF6BA] transition-colors">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-            </button>
-          </div>
-
-          <div className="flex gap-4 overflow-x-auto pb-6 px-1 no-scrollbar -mx-4 sm:mx-0 sm:px-0">
-            {communityData.length > 0 ? communityData.map((entry, idx) => (
-              <div key={idx} className="flex-shrink-0 w-36 glass-card rounded-[2rem] p-5 border-2 border-white/10 bg-white/5 shadow-sm transition-all hover:scale-105">
-                <div className="flex justify-center items-center mb-4">
-                  <div className="w-12 h-12 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-[11px] font-bold text-[#FCF6BA] shadow-inner">
-                    {entry.student_id.match(/\d+/g) ? entry.student_id.match(/\d+/g)?.join('') : entry.student_id.replace(/^DL\s?/i, '').toUpperCase()}
-                  </div>
-                </div>
-                <p className="text-[9px] font-bold font-mono text-teal-100/60 text-center uppercase tracking-wider">{formatDate(entry.date)}</p>
-              </div>
-            )) : (
-              <div className="w-full py-10 text-center text-teal-100/20 italic text-sm">Waiting for mindful connections...</div>
-            )}
-          </div>
-        </section>
-      )}
 
       {/* Patron Information Section */}
       <section className="mb-12 fade-content">
