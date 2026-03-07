@@ -39,7 +39,7 @@ const LANG_KEY = 'mindfulness_lang_pref';
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/14y9p-Z35NCNWlgOiiBY39epO9M44cESG7mlVwEJcAYM/edit?usp=sharing";
 const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/14y9p-Z35NCNWlgOiiBY39epO9M44cESG7mlVwEJcAYM/export?format=csv";
 const DRIVE_FOLDER_URL = "https://drive.google.com/drive/folders/19MedBT6RlbzVxyU5OM8Ec3-5uod0eJno?usp=sharing";
-const PATRON_WEBSITE_URL = "https://dhammalann.mindset-it.online/";
+const PATRON_WEBSITE_URL = "https://drsoelwin.mindset-it.online/";
 
 type Language = 'my' | 'en';
 
