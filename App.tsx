@@ -40,6 +40,8 @@ const SHEET_URL = "https://docs.google.com/spreadsheets/d/14y9p-Z35NCNWlgOiiBY39
 const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/14y9p-Z35NCNWlgOiiBY39epO9M44cESG7mlVwEJcAYM/export?format=csv";
 const DRIVE_FOLDER_URL = "https://drive.google.com/drive/folders/19MedBT6RlbzVxyU5OM8Ec3-5uod0eJno?usp=sharing";
 const PATRON_WEBSITE_URL = "https://drsoelwin.mindset-it.online/";
+const AUDIO_SUMMARY_URL = "https://dl-audio-to-ebooks.pages.dev/";
+const NOTEBOOK_LM_URL = "https://notebooklm.google.com/notebook/5c693072-7f7a-40a2-84da-8060c1213a8d";
 
 type Language = 'my' | 'en';
 
@@ -199,7 +201,9 @@ const App: React.FC = () => {
     explanation: lang === 'my' ? "ရှင်းလင်းချက်" : "Explanation",
     close: lang === 'my' ? "ပိတ်ရန်" : "Close",
     patronInfo: lang === 'my' ? "ဝိသုဒ္ဓိမဂ်ဓမ္မလမ်းဝိပဿနာအဖွဲ့များ၏ ဦးဆောင်နာယက၊ မဟာသဒ္ဓမ္မဇောတိကဓဇ ဆရာကြီးဒေါက်တာစိုးလွင်(မန္တလေး)" : "Patron of Visuddhimag Dhamma Lann Vipassana Organizations, Mahasaddhamajawtikadaja Dr. Soe Lwin (Mandalay)",
-    visitWebsite: lang === 'my' ? "ကိုယ်ရေးအကျဉ်း ကြည့်ရန်" : "Visit Biography Website"
+    visitWebsite: lang === 'my' ? "ကိုယ်ရေးအကျဉ်း ကြည့်ရန်" : "Visit Biography Website",
+    audioSummary: lang === 'my' ? "တရားတော်များ အနှစ်ချုပ်" : "Audio Summary",
+    notebookLM: "NotebookLM"
   };
 
   const firstUncompletedId = audioGuides.find(g => !g.isCompleted)?.id;
@@ -306,15 +310,35 @@ const App: React.FC = () => {
               {t.patronInfo}
             </p>
           </div>
-          <a 
-            href={PATRON_WEBSITE_URL} 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="flex items-center gap-2 px-6 py-3 bg-[#B8860B] text-white rounded-2xl text-xs font-bold shadow-lg hover:bg-[#9a700a] transition-all active-scale border border-[#FCF6BA]/30 relative z-10"
-          >
-            {t.visitWebsite}
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-          </a>
+          <div className="flex flex-col sm:flex-row gap-3 relative z-10">
+            <a 
+              href={PATRON_WEBSITE_URL} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="flex items-center justify-center gap-2 px-6 py-3 bg-[#B8860B] text-white rounded-2xl text-xs font-bold shadow-lg hover:bg-[#9a700a] transition-all active-scale border border-[#FCF6BA]/30"
+            >
+              {t.visitWebsite}
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+            </a>
+            <a 
+              href={AUDIO_SUMMARY_URL} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="flex items-center justify-center gap-2 px-6 py-3 bg-white/5 text-white/80 rounded-2xl text-xs font-bold shadow-lg hover:bg-white/10 transition-all active-scale border border-white/10"
+            >
+              {t.audioSummary}
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
+            </a>
+            <a 
+              href={NOTEBOOK_LM_URL} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="flex items-center justify-center gap-2 px-6 py-3 bg-white/5 text-white/80 rounded-2xl text-xs font-bold shadow-lg hover:bg-white/10 transition-all active-scale border border-white/10"
+            >
+              {t.notebookLM}
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.989-2.386l-.548-.547z" /></svg>
+            </a>
+          </div>
         </div>
       </section>
 
