@@ -20,10 +20,26 @@
     <noscript>
         <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;600&family=Noto+Sans+Myanmar:wght@400;700&display=swap" rel="stylesheet">
     </noscript>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#B8860B">
+    <link rel="apple-touch-icon" href="https://picsum.photos/seed/mindful/192/192">
 </head>
 <body class="min-h-screen selection:bg-[#006D77] selection:text-white">
     <a href="#main-content" class="skip-link">Skip to main content</a>
     <div id="root"></div>
 <script type="module" src="/index.tsx"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js')
+        .then(registration => {
+          console.log('SW registered: ', registration);
+        })
+        .catch(registrationError => {
+          console.log('SW registration failed: ', registrationError);
+        });
+    });
+  }
+</script>
 </body>
 </html>
