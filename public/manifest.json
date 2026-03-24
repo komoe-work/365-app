@@ -1,21 +1,38 @@
 {
+  "id": "/365-mindful-app",
   "name": "365 Mindful App",
   "short_name": "365 Mindful",
   "description": "365 Days Vipassana Training by Dr. Soe Lwin (Mandalay)",
   "start_url": "/",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#051a12",
   "theme_color": "#B8860B",
+  "categories": [
+    "education",
+    "lifestyle"
+  ],
   "icons": [
     {
       "src": "https://picsum.photos/seed/mindful/192/192",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "https://picsum.photos/seed/mindful/512/512",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "https://picsum.photos/seed/mindful-screenshot/1080/1920",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Home Screen"
     }
   ]
 }
