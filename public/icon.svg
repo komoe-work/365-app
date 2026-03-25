@@ -1,0 +1,18 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <!-- Deep Teal Background -->
+  <rect width="1024" height="1024" fill="#051a12"/>
+  
+  <!-- Safe Area Guide (Hidden in production, but helpful for design) -->
+  <!-- <circle cx="512" cy="512" r="410" fill="none" stroke="white" stroke-dasharray="10" opacity="0.2"/> -->
+
+  <!-- Golden Lotus Symbol -->
+  <g transform="translate(512, 440) scale(1.2)">
+    <path d="M0 -220 C 40 -140 120 -80 180 -80 C 120 -80 40 -20 0 60 C -40 -20 -120 -80 -180 -80 C -120 -80 -40 -140 0 -220 Z" fill="#B8860B"/>
+    <path d="M0 -160 C 60 -100 140 -40 160 40 C 100 20 40 0 0 0 C -40 0 -100 20 -160 40 C -140 -40 -60 -100 0 -160 Z" fill="#B8860B" opacity="0.8"/>
+    <path d="M0 -100 C 80 -60 160 20 120 120 C 60 80 20 60 0 60 C -20 60 -60 80 -120 120 C -160 20 -80 -60 0 -100 Z" fill="#B8860B" opacity="0.6"/>
+    <circle cx="0" cy="40" r="30" fill="#B8860B"/>
+  </g>
+
+  <!-- DHAMMALANN MEDITATION Text -->
+  <text x="512" y="820" font-family="Inter, sans-serif" font-size="54" font-weight="700" fill="#B8860B" text-anchor="middle" letter-spacing="8">DHAMMALANN MEDITATION</text>
+</svg>
