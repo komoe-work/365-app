@@ -189,7 +189,7 @@ const App: React.FC = () => {
   };
 
   const t = {
-    titleEn: "365 Days Vipassana Training",
+    titleEn: "Dhammalann Meditation",
     audioTitle: lang === 'my' ? "တရားတော်များ နာယူရန်" : "Audio Sanctuary",
     audioSubtitle: lang === 'my' ? "တစ်နှစ်တာ နေ့စဉ် နာယူရန်" : "365 Days Journey",
     googleSheet: lang === 'my' ? "Google Sheet ကြည့်ရန်" : "View Google Sheet",
@@ -211,15 +211,11 @@ const App: React.FC = () => {
   return (
     <main id="main-content" className={`max-w-2xl mx-auto px-4 py-6 md:py-12 relative ${lang === 'my' ? 'lang-my' : ''}`}>
       <header className="text-center mb-16 fade-content relative pt-12">
-        <h1 className={`font-bold mb-2 text-balance break-keep ${lang === 'my' ? 'text-[18px] sm:text-2xl md:text-3xl leading-[1.8]' : 'text-2xl md:text-3xl leading-tight'}`}>
+        <h1 className={`font-bold mb-2 text-balance break-keep ${lang === 'my' ? 'text-[22px] sm:text-3xl md:text-4xl leading-[1.6]' : 'text-2xl md:text-3xl leading-tight'}`}>
           {lang === 'my' ? (
-            <>
-              <span className="inline-block whitespace-nowrap">ဆရာကြီးဒေါက်တာစိုးလွင်</span>(မန္တလေး) ၏ <br /> 
-              သိ-ပယ်-ဆိုက်-ပွား ၃၆၅ ရက် ဝိပဿနာ<br /> 
-              အလုပ်ပေးတရား
-            </>
+            <>ဓမ္မလမ်း ဝိပဿနာ</>
           ) : (
-            <>Dr. Soe Lwin (Mandalay)'s<br className="sm:hidden" /> 365 Days Vipassana Training</>
+            <>Dhammalann Meditation</>
           )}
         </h1>
         <div className="h-0.5 w-10 bg-[#B8860B] mx-auto rounded-full opacity-30" aria-hidden="true"></div>

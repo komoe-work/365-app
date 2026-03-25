@@ -1,7 +1,7 @@
 {
-  "id": "/365-mindful-app",
-  "name": "365 Mindful App",
-  "short_name": "365 Mindful",
+  "id": "/dhammalann-meditation",
+  "name": "Dhammalann Meditation",
+  "short_name": "Dhammalann",
   "description": "365 Days Vipassana Training by Dr. Soe Lwin (Mandalay)",
   "start_url": "/",
   "display": "standalone",
