@@ -52,8 +52,30 @@ const App: React.FC = () => {
   const [selectedAudio, setSelectedAudio] = useState<AudioGuide | null>(null);
   
   const [hasScrolled, setHasScrolled] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [showIosModal, setShowIosModal] = useState(false);
+  const [isStandalone, setIsStandalone] = useState(false);
 
   const todayDate = new Date().toISOString().split('T')[0];
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+
+    const checkStandalone = () => {
+      const isStandaloneMode = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone;
+      setIsStandalone(!!isStandaloneMode);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    checkStandalone();
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
 
   useEffect(() => {
     const fetchSheetData = async () => {
@@ -203,7 +225,26 @@ const App: React.FC = () => {
     patronInfo: lang === 'my' ? "ဝိသုဒ္ဓိမဂ်ဓမ္မလမ်းဝိပဿနာအဖွဲ့များ၏ ဦးဆောင်နာယက၊ မဟာသဒ္ဓမ္မဇောတိကဓဇ ဆရာကြီးဒေါက်တာစိုးလွင်(မန္တလေး)" : "Patron of Visuddhimag Dhamma Lann Vipassana Organizations, Mahasaddhamajawtikadaja Dr. Soe Lwin (Mandalay)",
     visitWebsite: lang === 'my' ? "ကိုယ်ရေးအကျဉ်း ကြည့်ရန်" : "Visit Biography Website",
     audioSummary: lang === 'my' ? "တရားတော်များ အနှစ်ချုပ်" : "Audio Summary",
-    notebookLM: "NotebookLM"
+    notebookLM: "NotebookLM",
+    installApp: lang === 'my' ? "App ထည့်သွင်းရန်" : "Install App",
+    iosInstallTitle: lang === 'my' ? "App ထည့်သွင်းနည်း" : "How to Install",
+    iosInstallDesc: lang === 'my' ? "App ထည့်သွင်းရန်: သင့်ဖုန်း၏ Share icon ကိုနှိပ်ပြီး 'Add to Home Screen' ကိုရွေးချယ်ပါ။" : "To install: Tap the Share icon at the bottom of your screen, then select 'Add to Home Screen'."
+  };
+
+  const handleInstallClick = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setDeferredPrompt(null);
+      }
+    } else {
+      const userAgent = window.navigator.userAgent.toLowerCase();
+      const isIos = /iphone|ipad|ipod/.test(userAgent);
+      if (isIos) {
+        setShowIosModal(true);
+      }
+    }
   };
 
   const firstUncompletedId = audioGuides.find(g => !g.isCompleted)?.id;
@@ -231,6 +272,19 @@ const App: React.FC = () => {
               <p className="text-teal-100/70 text-xs italic">{t.audioSubtitle}</p>
             </div>
             <div className="flex items-center gap-2">
+              {!isStandalone && (deferredPrompt || /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase())) && (
+                <button 
+                  onClick={handleInstallClick}
+                  className="bg-white/10 p-3 rounded-2xl shadow-lg active:scale-90 transition-transform hover:bg-white/20 border border-white/20 flex items-center justify-center gap-2"
+                  title={t.installApp}
+                  aria-label={t.installApp}
+                >
+                  <svg className="w-5 h-5 text-[#B8860B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                  </svg>
+                  <span className="hidden sm:inline text-[10px] font-bold text-white tracking-widest uppercase">{t.installApp}</span>
+                </button>
+              )}
               <button 
                 onClick={() => setLang(lang === 'my' ? 'en' : 'my')} 
                 className="bg-white/10 p-3 rounded-2xl shadow-lg active:scale-90 transition-transform hover:bg-white/20 border border-white/20 flex items-center justify-center min-w-[44px]"
@@ -382,6 +436,32 @@ const App: React.FC = () => {
                   {t.close}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* iOS Install Modal */}
+      {showIosModal && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="glass-card w-full max-w-sm rounded-[2.5rem] p-8 border-2 border-[#D4AF37]/40 relative overflow-hidden shadow-2xl text-center">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/5 rounded-full -mr-16 -mt-16" aria-hidden="true"></div>
+            <div className="relative z-10">
+              <div className="w-16 h-16 bg-[#B8860B]/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                <svg className="w-8 h-8 text-[#B8860B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold gold-text mb-4">{t.iosInstallTitle}</h3>
+              <p className="text-white/80 text-sm leading-relaxed mb-8">
+                {t.iosInstallDesc}
+              </p>
+              <button 
+                onClick={() => setShowIosModal(false)}
+                className="w-full py-4 bg-[#B8860B] text-white rounded-2xl font-bold shadow-lg hover:bg-[#9a700a] transition-all active-scale border border-[#FCF6BA]/30"
+              >
+                {t.close}
+              </button>
             </div>
           </div>
         </div>
