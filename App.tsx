@@ -5,12 +5,13 @@ import { AudioGuide } from './types';
 /**
  * AUDIO LINK SYSTEM
  * The app now automatically fetches links from your Google Sheet!
- * Sheet: https://docs.google.com/spreadsheets/d/1ar6nk7S2y6Uucno1qzMuDK8NdrOY7oz-WjKJZIW05Dg
+ * Sheet: https://docs.google.com/spreadsheets/d/14y9p-Z35NCNWlgOiiBY39epO9M44cESG7mlVwEJcAYM/edit?usp=sharing
  * 
  * To add more days:
  * 1. Add a new row to the Google Sheet.
- * 2. Ensure the filename starts with "DayNumber_" (e.g., "6_Filename.mp3").
- * 3. Paste the Share Link in the second column.
+ * 2. Column B should be "Day X".
+ * 3. Column D should be the Myanmar description/filename.
+ * 4. Column E should be the Google Drive Share Link.
  */
 const AUDIO_LINKS: Record<number, string> = {
   // Hardcoded fallbacks for the first 5 days
@@ -54,6 +55,7 @@ const App: React.FC = () => {
   const [hasScrolled, setHasScrolled] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showIosModal, setShowIosModal] = useState(false);
+  const [showAndroidModal, setShowAndroidModal] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
 
   const todayDate = new Date().toISOString().split('T')[0];
@@ -89,31 +91,31 @@ const App: React.FC = () => {
           // Robust CSV parsing (handling potential quotes and commas inside quotes)
           const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
           
-          // Based on user's sheet: 
+          // Based on user's new sheet format: 
           // Column A (parts[0]) = No.
-          // Column B (parts[1]) = "Day X"
-          // Column C (parts[2]) = Date
-          // Column D (parts[3]) = Explanation
+          // Column B (parts[1]) = Day Count (e.g., "Day 1")
+          // Column C (parts[2]) = Date (DD-MM-YYYY)
+          // Column D (parts[3]) = File Name (Myanmar Text)
           // Column E (parts[4]) = Share Link
           if (parts.length >= 5) {
             const noText = parts[0].replace(/^"|"$/g, '').trim();
             const dayText = parts[1].replace(/^"|"$/g, '').trim();
             const date = parts[2].replace(/^"|"$/g, '').trim();
-            const explanation = parts[3].replace(/^"|"$/g, '').trim();
+            const fileName = parts[3].replace(/^"|"$/g, '').trim();
             const shareLink = parts[4].replace(/[<>"\s]/g, '').replace(/^"|"$/g, '');
             
-            // Extract Day Number from "Day X" or just the "No." column
+            // Extract Day Number from "Day X" or the "No." column
             const dayMatch = dayText.match(/Day\s*(\d+)/i) || noText.match(/^(\d+)$/);
             if (dayMatch) {
               const dayNum = parseInt(dayMatch[1]);
               const fileIdMatch = shareLink.match(/id=([^&]+)/) || shareLink.match(/\/d\/([^/]+)/);
+              
               if (fileIdMatch) {
                 links[dayNum] = { 
                   id: fileIdMatch[1], 
-                  fileName: dayText, 
+                  fileName: fileName || dayText, // Use Myanmar filename if available
                   shareLink, 
-                  date, 
-                  explanation 
+                  date
                 };
               }
             }
@@ -121,14 +123,19 @@ const App: React.FC = () => {
         });
 
         if (Object.keys(links).length > 0) {
-          setAudioGuides(prev => prev.map(guide => ({
-            ...guide,
-            audioUrl: links[guide.id] ? getDriveUrl(links[guide.id].id) : guide.audioUrl,
-            fileName: links[guide.id] ? links[guide.id].fileName : guide.fileName,
-            shareLink: links[guide.id] ? links[guide.id].shareLink : guide.shareLink,
-            date: links[guide.id] ? links[guide.id].date : guide.date,
-            explanation: links[guide.id] ? links[guide.id].explanation : guide.explanation
-          })));
+          setAudioGuides(prev => prev.map(guide => {
+            const sheetData = links[guide.id];
+            if (!sheetData) return guide;
+
+            return {
+              ...guide,
+              audioUrl: getDriveUrl(sheetData.id),
+              fileName: sheetData.fileName,
+              shareLink: sheetData.shareLink,
+              date: sheetData.date || guide.date,
+              explanation: sheetData.fileName // Using the Myanmar filename as explanation/title
+            };
+          }));
         }
       } catch (error) {
         console.error("Error fetching sheet data:", error);
@@ -228,7 +235,8 @@ const App: React.FC = () => {
     notebookLM: "NotebookLM",
     installApp: lang === 'my' ? "App ထည့်သွင်းရန်" : "Install App",
     iosInstallTitle: lang === 'my' ? "App ထည့်သွင်းနည်း" : "How to Install",
-    iosInstallDesc: lang === 'my' ? "App ထည့်သွင်းရန်: သင့်ဖုန်း၏ Share icon ကိုနှိပ်ပြီး 'Add to Home Screen' ကိုရွေးချယ်ပါ။" : "To install: Tap the Share icon at the bottom of your screen, then select 'Add to Home Screen'."
+    iosInstallDesc: lang === 'my' ? "App ထည့်သွင်းရန်: သင့်ဖုန်း၏ Share icon ကိုနှိပ်ပြီး 'Add to Home Screen' ကိုရွေးချယ်ပါ။" : "To install: Tap the Share icon at the bottom of your screen, then select 'Add to Home Screen'.",
+    androidInstallDesc: lang === 'my' ? "App ထည့်သွင်းရန်: ဘရောက်ဇာမီနူး (အစက်သုံးစက်) ကိုနှိပ်ပြီး 'Install app' သို့မဟုတ် 'Add to Home screen' ကိုရွေးချယ်ပါ။" : "To install: Tap the browser menu (three dots) at the top right, then select 'Install app' or 'Add to Home screen'."
   };
 
   const handleInstallClick = async () => {
@@ -243,6 +251,8 @@ const App: React.FC = () => {
       const isIos = /iphone|ipad|ipod/.test(userAgent);
       if (isIos) {
         setShowIosModal(true);
+      } else {
+        setShowAndroidModal(true);
       }
     }
   };
@@ -272,7 +282,7 @@ const App: React.FC = () => {
               <p className="text-teal-100/70 text-xs italic">{t.audioSubtitle}</p>
             </div>
             <div className="flex items-center gap-2">
-              {!isStandalone && (deferredPrompt || /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase())) && (
+              {!isStandalone && (
                 <button 
                   onClick={handleInstallClick}
                   className="bg-white/10 p-3 rounded-2xl shadow-lg active:scale-90 transition-transform hover:bg-white/20 border border-white/20 flex items-center justify-center gap-2"
@@ -458,6 +468,32 @@ const App: React.FC = () => {
               </p>
               <button 
                 onClick={() => setShowIosModal(false)}
+                className="w-full py-4 bg-[#B8860B] text-white rounded-2xl font-bold shadow-lg hover:bg-[#9a700a] transition-all active-scale border border-[#FCF6BA]/30"
+              >
+                {t.close}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Android Install Modal */}
+      {showAndroidModal && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="glass-card w-full max-w-sm rounded-[2.5rem] p-8 border-2 border-[#D4AF37]/40 relative overflow-hidden shadow-2xl text-center">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/5 rounded-full -mr-16 -mt-16" aria-hidden="true"></div>
+            <div className="relative z-10">
+              <div className="w-16 h-16 bg-[#B8860B]/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                <svg className="w-8 h-8 text-[#B8860B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold gold-text mb-4">{t.iosInstallTitle}</h3>
+              <p className="text-white/80 text-sm leading-relaxed mb-8">
+                {t.androidInstallDesc}
+              </p>
+              <button 
+                onClick={() => setShowAndroidModal(false)}
                 className="w-full py-4 bg-[#B8860B] text-white rounded-2xl font-bold shadow-lg hover:bg-[#9a700a] transition-all active-scale border border-[#FCF6BA]/30"
               >
                 {t.close}
