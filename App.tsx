@@ -41,7 +41,7 @@ const SHEET_URL = "https://docs.google.com/spreadsheets/d/14y9p-Z35NCNWlgOiiBY39
 const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/14y9p-Z35NCNWlgOiiBY39epO9M44cESG7mlVwEJcAYM/export?format=csv";
 const DRIVE_FOLDER_URL = "https://drive.google.com/drive/folders/19MedBT6RlbzVxyU5OM8Ec3-5uod0eJno?usp=sharing";
 const PATRON_WEBSITE_URL = "https://drsoelwin.mindset-it.online/";
-const AUDIO_SUMMARY_URL = "https://dl-audio-to-ebooks.pages.dev/";
+const AUDIO_SUMMARY_URL = "https://dhamma-mindset.pages.dev/";
 const NOTEBOOK_LM_URL = "https://notebooklm.google.com/notebook/5c693072-7f7a-40a2-84da-8060c1213a8d";
 
 type Language = 'my' | 'en';
@@ -56,6 +56,11 @@ const App: React.FC = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showIosModal, setShowIosModal] = useState(false);
   const [showAndroidModal, setShowAndroidModal] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(() => localStorage.getItem('mindful_is_admin') === 'true');
+  const [showPinModal, setShowPinModal] = useState(false);
+  const [pinInput, setPinInput] = useState('');
+  const [pendingUrl, setPendingUrl] = useState<string | null>(null);
+  const [pinError, setPinError] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
 
   const todayDate = new Date().toISOString().split('T')[0];
@@ -236,9 +241,40 @@ const App: React.FC = () => {
     installApp: lang === 'my' ? "App ထည့်သွင်းရန်" : "Install App",
     iosInstallTitle: lang === 'my' ? "App ထည့်သွင်းနည်း" : "How to Install",
     iosInstallDesc: lang === 'my' ? "App ထည့်သွင်းရန်: သင့်ဖုန်း၏ Share icon ကိုနှိပ်ပြီး 'Add to Home Screen' ကိုရွေးချယ်ပါ။" : "To install: Tap the Share icon at the bottom of your screen, then select 'Add to Home Screen'.",
-    androidInstallDesc: lang === 'my' ? "App ထည့်သွင်းရန်: ဘရောက်ဇာမီနူး (အစက်သုံးစက်) ကိုနှိပ်ပြီး 'Install app' သို့မဟုတ် 'Add to Home screen' ကိုရွေးချယ်ပါ။" : "To install: Tap the browser menu (three dots) at the top right, then select 'Install app' or 'Add to Home screen'."
+    androidInstallDesc: lang === 'my' ? "App ထည့်သွင်းရန်: ဘရောက်ဇာမီနူး (အစက်သုံးစက်) ကိုနှိပ်ပြီး 'Install app' သို့မဟုတ် 'Add to Home screen' ကိုရွေးချယ်ပါ။" : "To install: Tap the browser menu (three dots) at the top right, then select 'Install app' or 'Add to Home screen'.",
+    adminPinTitle: lang === 'my' ? "Admin Access လိုအပ်ပါသည်" : "Admin Access Required",
+    adminPinDesc: lang === 'my' ? "ဤလင့်ခ်ကို ကြည့်ရှုရန် PIN ကုဒ် ရိုက်ထည့်ပါ" : "Enter PIN code to access this link",
+    enterPin: lang === 'my' ? "PIN ကုဒ် ရိုက်ထည့်ပါ" : "Enter PIN Code",
+    invalidPin: lang === 'my' ? "PIN ကုဒ် မှားယွင်းနေပါသည်" : "Invalid PIN Code",
+    submit: lang === 'my' ? "အတည်ပြုရန်" : "Submit"
   };
 
+  const handleAdminLinkClick = (url: string) => {
+    if (isAdmin) {
+      window.open(url, '_blank');
+    } else {
+      setPendingUrl(url);
+      setShowPinModal(true);
+      setPinInput('');
+      setPinError(false);
+    }
+  };
+
+  const handlePinSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (pinInput === '666666') {
+      setIsAdmin(true);
+      localStorage.setItem('mindful_is_admin', 'true');
+      setShowPinModal(false);
+      if (pendingUrl) {
+        window.open(pendingUrl, '_blank');
+        setPendingUrl(null);
+      }
+    } else {
+      setPinError(true);
+      setPinInput('');
+    }
+  };
   const handleInstallClick = async () => {
     if (deferredPrompt) {
       deferredPrompt.prompt();
@@ -260,7 +296,7 @@ const App: React.FC = () => {
   const firstUncompletedId = audioGuides.find(g => !g.isCompleted)?.id;
 
   return (
-    <main id="main-content" className={`max-w-2xl mx-auto px-4 py-6 md:py-12 relative ${lang === 'my' ? 'lang-my' : ''}`}>
+    <main id="main-content" className={`max-w-2xl mx-auto px-4 py-6 md:py-12 relative pb-24 ${lang === 'my' ? 'lang-my' : ''}`}>
       <header className="text-center mb-16 fade-content relative pt-12">
         <h1 className={`font-bold mb-2 text-balance break-keep ${lang === 'my' ? 'text-[22px] sm:text-3xl md:text-4xl leading-[1.6]' : 'text-2xl md:text-3xl leading-tight'}`}>
           {lang === 'my' ? (
@@ -280,35 +316,6 @@ const App: React.FC = () => {
             <div className={lang === 'my' ? 'leading-relaxed' : ''}>
               <h2 className="text-xl font-bold gold-text">{t.audioTitle}</h2>
               <p className="text-teal-100/70 text-xs italic">{t.audioSubtitle}</p>
-            </div>
-            <div className="flex items-center gap-2">
-              {!isStandalone && (
-                <button 
-                  onClick={handleInstallClick}
-                  className="bg-white/10 p-3 rounded-2xl shadow-lg active:scale-90 transition-transform hover:bg-white/20 border border-white/20 flex items-center justify-center gap-2"
-                  title={t.installApp}
-                  aria-label={t.installApp}
-                >
-                  <svg className="w-5 h-5 text-[#B8860B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                  </svg>
-                  <span className="hidden sm:inline text-[10px] font-bold text-white tracking-widest uppercase">{t.installApp}</span>
-                </button>
-              )}
-              <button 
-                onClick={() => setLang(lang === 'my' ? 'en' : 'my')} 
-                className="bg-white/10 p-3 rounded-2xl shadow-lg active:scale-90 transition-transform hover:bg-white/20 border border-white/20 flex items-center justify-center min-w-[44px]"
-                title={lang === 'my' ? "Switch to English" : "မြန်မာဘာသာသို့ ပြောင်းရန်"}
-                aria-label={lang === 'my' ? "Switch to English" : "မြန်မာဘာသာသို့ ပြောင်းရန်"}
-              >
-                <span className="text-[10px] font-bold text-white tracking-widest">{lang === 'my' ? 'EN' : 'MY'}</span>
-              </button>
-              <a href={SHEET_URL} target="_blank" rel="noopener noreferrer" title={t.googleSheet} aria-label={t.googleSheet} className="bg-white/10 p-3 rounded-2xl shadow-lg active:scale-90 transition-transform hover:bg-white/20 border border-white/20">
-                <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2zM19 19H5V4h8v4h4v11zM7 10h10v2H7v-2zm0 4h10v2H7v-2z"/></svg>
-              </a>
-              <a href={DRIVE_FOLDER_URL} target="_blank" rel="noopener noreferrer" title={t.fullLibrary} aria-label={t.fullLibrary} className="bg-[#B8860B] p-3 rounded-2xl shadow-lg active:scale-90 transition-transform hover:bg-[#9a700a] border border-[#FCF6BA]/30">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-              </a>
             </div>
           </div>
           <div className="max-h-[500px] overflow-y-auto pr-2 -mr-2 custom-scrollbar">
@@ -502,6 +509,104 @@ const App: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Admin PIN Modal */}
+      {showPinModal && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
+          <div className="glass-card w-full max-w-sm rounded-[2.5rem] p-8 border-2 border-[#D4AF37]/40 relative overflow-hidden shadow-2xl text-center">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/5 rounded-full -mr-16 -mt-16" aria-hidden="true"></div>
+            <div className="relative z-10">
+              <div className="w-16 h-16 bg-[#B8860B]/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                <svg className="w-8 h-8 text-[#B8860B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold gold-text mb-2">{t.adminPinTitle}</h3>
+              <p className="text-white/60 text-xs mb-6">{t.adminPinDesc}</p>
+              
+              <form onSubmit={handlePinSubmit} className="space-y-4">
+                <input 
+                  type="password"
+                  value={pinInput}
+                  onChange={(e) => { setPinInput(e.target.value); setPinError(false); }}
+                  placeholder={t.enterPin}
+                  className={`w-full bg-white/5 border ${pinError ? 'border-red-500' : 'border-white/20'} rounded-2xl px-4 py-4 text-center text-white text-xl tracking-[0.5em] focus:outline-none focus:border-[#D4AF37] transition-all`}
+                  autoFocus
+                />
+                {pinError && <p className="text-red-500 text-[10px] font-bold uppercase tracking-widest">{t.invalidPin}</p>}
+                
+                <div className="flex gap-3">
+                  <button 
+                    type="button"
+                    onClick={() => setShowPinModal(false)}
+                    className="flex-1 py-4 bg-white/5 text-white/60 rounded-2xl font-bold hover:bg-white/10 transition-all active-scale border border-white/10"
+                  >
+                    {t.close}
+                  </button>
+                  <button 
+                    type="submit"
+                    className="flex-[2] py-4 bg-[#B8860B] text-white rounded-2xl font-bold shadow-lg hover:bg-[#9a700a] transition-all active-scale border border-[#FCF6BA]/30"
+                  >
+                    {t.submit}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Action Dock (Better Idea for Mobile) */}
+      <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[90] w-[90%] max-w-md">
+        <div className="glass-card rounded-full p-2 border-2 border-[#D4AF37]/30 shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex items-center justify-between gap-2 backdrop-blur-xl bg-black/40">
+          {!isStandalone && (
+            <button 
+              onClick={handleInstallClick}
+              className="flex-1 bg-white/5 hover:bg-white/10 p-3 rounded-full flex flex-col items-center justify-center gap-1 transition-all active:scale-90 border border-white/10"
+              title={t.installApp}
+            >
+              <svg className="w-5 h-5 text-[#B8860B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+              </svg>
+              <span className="text-[8px] font-bold text-white/60 uppercase tracking-tighter">Install</span>
+            </button>
+          )}
+          
+          <button 
+            onClick={() => setLang(lang === 'my' ? 'en' : 'my')} 
+            className="flex-1 bg-white/5 hover:bg-white/10 p-3 rounded-full flex flex-col items-center justify-center gap-1 transition-all active:scale-90 border border-white/10 relative group"
+            title={lang === 'my' ? "Switch to English" : "မြန်မာဘာသာသို့ ပြောင်းရန်"}
+          >
+            <div className="relative">
+              <svg className="w-5 h-5 text-white/80 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+              </svg>
+              <span className="absolute -top-1 -right-1 flex h-3 w-3 items-center justify-center rounded-full bg-[#B8860B] text-[6px] font-bold text-white ring-1 ring-black/50">
+                {lang === 'my' ? 'MY' : 'EN'}
+              </span>
+            </div>
+            <span className="text-[8px] font-bold text-white/60 uppercase tracking-tighter">Language</span>
+          </button>
+
+          <button 
+            onClick={() => handleAdminLinkClick(SHEET_URL)} 
+            className="flex-1 bg-white/5 hover:bg-white/10 p-3 rounded-full flex flex-col items-center justify-center gap-1 transition-all active:scale-90 border border-white/10"
+            title={t.googleSheet}
+          >
+            <svg className="w-5 h-5 text-white/80" fill="currentColor" viewBox="0 0 24 24"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2zM19 19H5V4h8v4h4v11zM7 10h10v2H7v-2zm0 4h10v2H7v-2z"/></svg>
+            <span className="text-[8px] font-bold text-white/60 uppercase tracking-tighter">Sheet</span>
+          </button>
+
+          <button 
+            onClick={() => handleAdminLinkClick(DRIVE_FOLDER_URL)} 
+            className="flex-1 bg-[#B8860B] hover:bg-[#9a700a] p-3 rounded-full flex flex-col items-center justify-center gap-1 transition-all active:scale-95 border border-[#FCF6BA]/30 shadow-lg"
+            title={t.fullLibrary}
+          >
+            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+            <span className="text-[8px] font-bold text-white uppercase tracking-tighter">Library</span>
+          </button>
+        </div>
+      </nav>
 
       <footer className="mt-12 text-center pb-8 opacity-40 border-t border-gray-200 pt-8">
         <p className="text-[10px] tracking-[0.3em] font-bold text-teal-900/60 uppercase">Mindful Project / {new Date().getFullYear()}</p>
