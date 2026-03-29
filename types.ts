@@ -5,6 +5,8 @@ export interface AudioGuide {
   titleMy: string;
   isCompleted: boolean;
   audioUrl?: string;
+  fileId?: string;
+  downloadUrl?: string;
   fileName?: string;
   shareLink?: string;
   date?: string;

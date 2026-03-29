@@ -23,15 +23,19 @@ const AUDIO_LINKS: Record<number, string> = {
 };
 
 const getDriveUrl = (id: string) => `https://drive.google.com/file/d/${id}/view`;
+const getDownloadUrl = (id: string) => `https://drive.google.com/uc?export=download&id=${id}`;
 
 const INITIAL_AUDIO: AudioGuide[] = Array.from({ length: 365 }, (_, i) => {
   const day = i + 1;
+  const fileId = AUDIO_LINKS[day];
   return {
     id: day,
     titleEn: `Day ${day}`,
     titleMy: `နေ့ရက် (${day})`,
     isCompleted: false,
-    audioUrl: AUDIO_LINKS[day] ? getDriveUrl(AUDIO_LINKS[day]) : undefined
+    fileId,
+    audioUrl: fileId ? getDriveUrl(fileId) : undefined,
+    downloadUrl: fileId ? getDownloadUrl(fileId) : undefined
   };
 });
 
@@ -116,8 +120,9 @@ const App: React.FC = () => {
               const fileIdMatch = shareLink.match(/id=([^&]+)/) || shareLink.match(/\/d\/([^/]+)/);
               
               if (fileIdMatch) {
+                const fileId = fileIdMatch[1];
                 links[dayNum] = { 
-                  id: fileIdMatch[1], 
+                  id: fileId, 
                   fileName: fileName || dayText, // Use Myanmar filename if available
                   shareLink, 
                   date
@@ -134,7 +139,9 @@ const App: React.FC = () => {
 
             return {
               ...guide,
+              fileId: sheetData.id,
               audioUrl: getDriveUrl(sheetData.id),
+              downloadUrl: getDownloadUrl(sheetData.id),
               fileName: sheetData.fileName,
               shareLink: sheetData.shareLink,
               date: sheetData.date || guide.date,
@@ -233,6 +240,7 @@ const App: React.FC = () => {
     dayLabel: lang === 'my' ? "နေ့ရက်" : "Day",
     listenNow: lang === 'my' ? "ယခုနာယူရန်" : "Listen Now",
     explanation: lang === 'my' ? "ရှင်းလင်းချက်" : "Explanation",
+    download: lang === 'my' ? "ဒေါင်းလုဒ်လုပ်ရန်" : "Download",
     close: lang === 'my' ? "ပိတ်ရန်" : "Close",
     patronInfo: lang === 'my' ? "ဝိသုဒ္ဓိမဂ်ဓမ္မလမ်းဝိပဿနာအဖွဲ့များ၏ ဦးဆောင်နာယက၊ မဟာသဒ္ဓမ္မဇောတိကဓဇ ဆရာကြီးဒေါက်တာစိုးလွင်(မန္တလေး)" : "Patron of Visuddhimag Dhamma Lann Vipassana Organizations, Mahasaddhamajawtikadaja Dr. Soe Lwin (Mandalay)",
     visitWebsite: lang === 'my' ? "ကိုယ်ရေးအကျဉ်း ကြည့်ရန်" : "Visit Biography Website",
@@ -446,6 +454,17 @@ const App: React.FC = () => {
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd"/></svg>
                   {t.listenNow}
                 </button>
+                {selectedAudio.downloadUrl && (
+                  <a 
+                    href={selectedAudio.downloadUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-white/5 text-white/80 rounded-2xl font-bold shadow-lg hover:bg-white/10 transition-all active-scale border border-white/10"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    {t.download}
+                  </a>
+                )}
                 <button 
                   onClick={() => setSelectedAudio(null)}
                   className="px-6 py-4 bg-white/5 text-white/60 rounded-2xl font-bold hover:bg-white/10 transition-all active-scale border border-white/10"
