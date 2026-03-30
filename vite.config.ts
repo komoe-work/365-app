@@ -15,13 +15,15 @@ export default defineConfig(({ mode }) => {
         tailwindcss(),
       ],
       build: {
-        minify: 'esbuild',
+        minify: true,
         rollupOptions: {
           output: {
-            manualChunks: {
-              'framer-motion': ['framer-motion'],
-              'lucide-react': ['lucide-react'],
-              'vendor-react': ['react', 'react-dom'],
+            manualChunks(id) {
+              if (id.includes("node_modules")) {
+                if (id.includes("framer-motion")) return "animations";
+                if (id.includes("lucide-react")) return "icons";
+                return "vendor";
+              }
             }
           }
         }

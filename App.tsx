@@ -2,6 +2,7 @@
 import React, { useState, useEffect, Suspense, lazy, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AudioGuide } from './types';
+import { meditationItems, getDriveUrl, getDownloadUrl } from './data/meditationData';
 
 // Lazy load non-critical components
 const ExplanationModal = lazy(() => import('./components/ExplanationModal'));
@@ -19,32 +20,6 @@ const AdminPinModal = lazy(() => import('./components/AdminPinModal'));
  * 3. Column D should be the Myanmar description/filename.
  * 4. Column E should be the Google Drive Share Link.
  */
-const AUDIO_LINKS: Record<number, string> = {
-  // Hardcoded fallbacks for the first 5 days
-  1: "1g4hPMTpBQwRFi8_hBOGwKP-RRwrzi2V8",
-  2: "1DhMZwrsySWsOxUNd1wGJka7ioVSFsjFv",
-  3: "1ebxI0V0-E06HtolmyU5mmw2TuXYgEHVi",
-  4: "1W7hGLOw2sTE_peSRCGRYg2XiIZ_OEvxu",
-  5: "1oVaoll-xKEPzaOjyZxKn7aqXxCMZQk55",
-};
-
-const getDriveUrl = (id: string) => `https://drive.google.com/file/d/${id}/view`;
-const getDownloadUrl = (id: string) => `https://drive.google.com/uc?export=download&id=${id}`;
-
-const INITIAL_AUDIO: AudioGuide[] = Array.from({ length: 365 }, (_, i) => {
-  const day = i + 1;
-  const fileId = AUDIO_LINKS[day];
-  return {
-    id: day,
-    titleEn: `Day ${day}`,
-    titleMy: `နေ့ရက် (${day})`,
-    isCompleted: false,
-    fileId,
-    audioUrl: fileId ? getDriveUrl(fileId) : undefined,
-    downloadUrl: fileId ? getDownloadUrl(fileId) : undefined
-  };
-});
-
 const STORAGE_KEY = 'mindful_project_v3';
 const LANG_KEY = 'mindfulness_lang_pref';
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/14y9p-Z35NCNWlgOiiBY39epO9M44cESG7mlVwEJcAYM/edit?usp=sharing";
@@ -58,7 +33,7 @@ type Language = 'my' | 'en';
 
 const App: React.FC = () => {
   const [lang, setLang] = useState<Language>(() => (localStorage.getItem(LANG_KEY) as Language) || 'my');
-  const [audioGuides, setAudioGuides] = useState<AudioGuide[]>(INITIAL_AUDIO);
+  const [audioGuides, setAudioGuides] = useState<AudioGuide[]>(meditationItems);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [selectedAudio, setSelectedAudio] = useState<AudioGuide | null>(null);
   
@@ -216,7 +191,7 @@ const App: React.FC = () => {
     if (saved) {
       const parsed = JSON.parse(saved);
       if (parsed.date === todayDate) {
-        setAudioGuides(parsed.audioGuides || INITIAL_AUDIO);
+        setAudioGuides(parsed.audioGuides || meditationItems);
       }
     }
   }, [todayDate]);
@@ -339,6 +314,13 @@ const App: React.FC = () => {
         className="text-center mb-16 relative pt-12"
         {...animationProps}
       >
+        <img 
+          src="/icon-192.png" 
+          alt="Dhammalann Logo" 
+          className="w-24 h-24 mx-auto mb-6 drop-shadow-2xl"
+          fetchPriority="high"
+          referrerPolicy="no-referrer"
+        />
         <h1 className={`font-bold mb-2 text-balance break-keep ${lang === 'my' ? 'text-[22px] sm:text-3xl md:text-4xl leading-[1.6]' : 'text-2xl md:text-3xl leading-tight'}`}>
           {t.titleEn}
         </h1>
