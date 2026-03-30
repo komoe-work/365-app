@@ -14,6 +14,21 @@ export default defineConfig(({ mode }) => {
         react(),
         tailwindcss(),
       ],
+      build: {
+        minify: 'esbuild',
+        rollupOptions: {
+          output: {
+            manualChunks: {
+              'framer-motion': ['framer-motion'],
+              'lucide-react': ['lucide-react'],
+              'vendor-react': ['react', 'react-dom'],
+            }
+          }
+        }
+      },
+      esbuild: {
+        drop: ['console', 'debugger'],
+      },
       define: {
         'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
         'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)

@@ -1,5 +1,6 @@
 
-import React, { useState, useEffect, Suspense, lazy } from 'react';
+import React, { useState, useEffect, Suspense, lazy, useMemo, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { AudioGuide } from './types';
 
 // Lazy load non-critical components
@@ -71,8 +72,18 @@ const App: React.FC = () => {
   const [pendingUrl, setPendingUrl] = useState<string | null>(null);
   const [pinError, setPinError] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   const todayDate = new Date().toISOString().split('T')[0];
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: Event) => {
@@ -189,7 +200,7 @@ const App: React.FC = () => {
     loadInitialData();
   }, []);
 
-  const formatDate = (dateStr: string) => {
+  const formatDate = useCallback((dateStr: string) => {
     if (!dateStr) return '';
     const date = new Date(dateStr);
     const dayNum = date.getDate();
@@ -198,9 +209,9 @@ const App: React.FC = () => {
     const month = months[date.getMonth()];
     const dayName = days[date.getDay()];
     return `${dayName}, ${dayNum} ${month}`;
-  };
+  }, []);
 
-  const loadInitialData = async () => {
+  const loadInitialData = useCallback(async () => {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       const parsed = JSON.parse(saved);
@@ -208,34 +219,34 @@ const App: React.FC = () => {
         setAudioGuides(parsed.audioGuides || INITIAL_AUDIO);
       }
     }
-  };
-
-  const saveAndSync = async (updatedAudio: AudioGuide[]) => {
+  }, [todayDate]);
+  const saveAndSync = useCallback(async (updatedAudio: AudioGuide[]) => {
     const stateToSave = { date: todayDate, audioGuides: updatedAudio };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
-  };
+  }, [todayDate]);
 
-  const toggleAudio = (id: number) => {
-    const updated = audioGuides.map(a => a.id === id ? { ...a, isCompleted: !a.isCompleted } : a);
-    setAudioGuides(updated);
-    saveAndSync(updated);
-  };
+  const toggleAudio = useCallback((id: number) => {
+    setAudioGuides(prev => {
+      const updated = prev.map(a => a.id === id ? { ...a, isCompleted: !a.isCompleted } : a);
+      saveAndSync(updated);
+      return updated;
+    });
+  }, [saveAndSync]);
 
-  const playAudio = (guide: AudioGuide) => {
+  const playAudio = useCallback((guide: AudioGuide) => {
     setSelectedAudio(guide);
-  };
+  }, []);
 
-  const listenNow = (guide: AudioGuide) => {
+  const listenNow = useCallback((guide: AudioGuide) => {
     if (guide.audioUrl) {
       window.open(guide.audioUrl, '_blank');
     } else {
-      // If no specific URL, open the main folder
       window.open(DRIVE_FOLDER_URL, '_blank');
     }
-  };
+  }, []);
 
-  const t = {
-    titleEn: "Dhammalann Meditation",
+  const t = useMemo(() => ({
+    titleEn: lang === 'my' ? "ဓမ္မလမ်း ဝိပဿနာ" : "Dhammalann Meditation",
     audioTitle: lang === 'my' ? "တရားတော်များ နာယူရန်" : "Audio Sanctuary",
     audioSubtitle: lang === 'my' ? "တစ်နှစ်တာ နေ့စဉ် နာယူရန်" : "365 Days Journey",
     googleSheet: lang === 'my' ? "Google Sheet ကြည့်ရန်" : "View Google Sheet",
@@ -260,9 +271,9 @@ const App: React.FC = () => {
     enterPin: lang === 'my' ? "PIN ကုဒ် ရိုက်ထည့်ပါ" : "Enter PIN Code",
     invalidPin: lang === 'my' ? "PIN ကုဒ် မှားယွင်းနေပါသည်" : "Invalid PIN Code",
     submit: lang === 'my' ? "အတည်ပြုရန်" : "Submit"
-  };
+  }), [lang]);
 
-  const handleAdminLinkClick = (url: string) => {
+  const handleAdminLinkClick = useCallback((url: string) => {
     if (isAdmin) {
       window.open(url, '_blank');
     } else {
@@ -271,9 +282,9 @@ const App: React.FC = () => {
       setPinInput('');
       setPinError(false);
     }
-  };
+  }, [isAdmin]);
 
-  const handlePinSubmit = (e: React.FormEvent) => {
+  const handlePinSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     if (pinInput === '666666') {
       setIsAdmin(true);
@@ -287,8 +298,9 @@ const App: React.FC = () => {
       setPinError(true);
       setPinInput('');
     }
-  };
-  const handleInstallClick = async () => {
+  }, [pinInput, pendingUrl]);
+
+  const handleInstallClick = useCallback(async () => {
     if (deferredPrompt) {
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
@@ -304,25 +316,41 @@ const App: React.FC = () => {
         setShowAndroidModal(true);
       }
     }
-  };
+  }, [deferredPrompt]);
 
-  const firstUncompletedId = audioGuides.find(g => !g.isCompleted)?.id;
+  const firstUncompletedId = useMemo(() => audioGuides.find(g => !g.isCompleted)?.id, [audioGuides]);
+
+  const animationProps = useMemo(() => {
+    if (isMobile) return {
+      initial: { opacity: 1, y: 0 },
+      animate: { opacity: 1, y: 0 },
+      transition: { duration: 0 }
+    };
+    return {
+      initial: { opacity: 0, y: 20 },
+      animate: { opacity: 1, y: 0 },
+      transition: { duration: 0.5, ease: "easeOut" as const }
+    };
+  }, [isMobile]);
 
   return (
     <main id="main-content" className={`max-w-2xl mx-auto px-4 py-6 md:py-12 relative pb-24 ${lang === 'my' ? 'lang-my' : ''}`}>
-      <header className="text-center mb-16 fade-content relative pt-12">
+      <motion.header 
+        className="text-center mb-16 relative pt-12"
+        {...animationProps}
+      >
         <h1 className={`font-bold mb-2 text-balance break-keep ${lang === 'my' ? 'text-[22px] sm:text-3xl md:text-4xl leading-[1.6]' : 'text-2xl md:text-3xl leading-tight'}`}>
-          {lang === 'my' ? (
-            <>ဓမ္မလမ်း ဝိပဿနာ</>
-          ) : (
-            <>Dhammalann Meditation</>
-          )}
+          {t.titleEn}
         </h1>
         <div className="h-0.5 w-10 bg-[#B8860B] mx-auto rounded-full opacity-30" aria-hidden="true"></div>
-      </header>
+      </motion.header>
 
       {/* Audio Section - PRIMARY FOCUS */}
-      <section className="glass-card rounded-[2.5rem] p-6 md:p-10 mb-8 text-white shadow-2xl relative overflow-hidden fade-content border-2 border-[#D4AF37]/30">
+      <motion.section 
+        className="glass-card rounded-[2.5rem] p-6 md:p-10 mb-8 text-white shadow-2xl relative overflow-hidden border-2 border-[#D4AF37]/30"
+        {...animationProps}
+        transition={{ ...animationProps.transition, delay: 0.1 }}
+      >
         <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/5 rounded-full -mr-16 -mt-16" aria-hidden="true"></div>
         <div className="relative z-10">
           <div className="flex items-center justify-between mb-8">
@@ -378,10 +406,14 @@ const App: React.FC = () => {
             </div>
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* Patron Information Section */}
-      <section className="mb-12 fade-content">
+      <motion.section 
+        className="mb-12"
+        {...animationProps}
+        transition={{ ...animationProps.transition, delay: 0.2 }}
+      >
         <div className="glass-card rounded-[2rem] p-8 border-l-4 border-[#D4AF37] shadow-2xl flex flex-col items-center text-center space-y-4 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-24 h-24 bg-[#D4AF37]/5 rounded-full -mr-12 -mt-12"></div>
           <div className="space-y-2 relative z-10">
@@ -420,17 +452,22 @@ const App: React.FC = () => {
             </a>
           </div>
         </div>
-      </section>
+      </motion.section>
 
-      {successMessage && (
-        <div 
-          className="fixed bottom-10 left-1/2 -translate-x-1/2 bg-teal-900 text-white px-6 py-4 rounded-2xl shadow-2xl z-[200] animate-fade-in font-bold text-xs" 
-          role="status"
-          aria-live="polite"
-        >
-          {successMessage}
-        </div>
-      )}
+      <AnimatePresence>
+        {successMessage && (
+          <motion.div 
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+            className="fixed bottom-10 left-1/2 -translate-x-1/2 bg-teal-900 text-white px-6 py-4 rounded-2xl shadow-2xl z-[200] font-bold text-xs" 
+            role="status"
+            aria-live="polite"
+          >
+            {successMessage}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <Suspense fallback={null}>
         {/* Explanation Modal */}
