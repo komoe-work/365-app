@@ -317,7 +317,7 @@ const App: React.FC = () => {
         <img 
           src="/maskable-icon-192.png" 
           alt="Dhammalann Logo" 
-          className="w-24 h-24 mx-auto mb-6 drop-shadow-2xl"
+          className="w-24 h-24 mx-auto mb-6 drop-shadow-2xl rounded-2xl"
           fetchPriority="high"
           referrerPolicy="no-referrer"
         />
