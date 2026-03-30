@@ -1,6 +1,11 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { AudioGuide } from './types';
+
+// Lazy load non-critical components
+const ExplanationModal = lazy(() => import('./components/ExplanationModal'));
+const InstallModal = lazy(() => import('./components/InstallModal'));
+const AdminPinModal = lazy(() => import('./components/AdminPinModal'));
 
 /**
  * AUDIO LINK SYSTEM
@@ -417,215 +422,114 @@ const App: React.FC = () => {
         </div>
       </section>
 
-      {successMessage && <div className="fixed bottom-10 left-1/2 -translate-x-1/2 bg-teal-900 text-white px-6 py-4 rounded-2xl shadow-2xl z-[200] animate-fade-in font-bold text-xs" role="status">{successMessage}</div>}
-
-      {/* Explanation Modal */}
-      {selectedAudio && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="glass-card w-full max-w-lg rounded-[2.5rem] p-8 border-2 border-[#D4AF37]/40 relative overflow-hidden shadow-2xl">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/5 rounded-full -mr-16 -mt-16" aria-hidden="true"></div>
-            
-            <div className="relative z-10">
-              <div className="flex justify-between items-start mb-6">
-                <div>
-                  <h3 className="text-2xl font-bold gold-text mb-1">{t.dayLabel} {selectedAudio.id}</h3>
-                  {selectedAudio.date && <p className="text-teal-100/40 text-xs font-bold uppercase tracking-widest">{selectedAudio.date}</p>}
-                </div>
-                <button 
-                  onClick={() => setSelectedAudio(null)}
-                  className="p-2 text-white/40 hover:text-white transition-colors"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                </button>
-              </div>
-
-              <div className="mb-8">
-                <h4 className="text-xs font-bold gold-text uppercase tracking-widest mb-3 opacity-60">{t.explanation}</h4>
-                <div className={`text-white/90 leading-relaxed max-h-[300px] overflow-y-auto pr-2 custom-scrollbar whitespace-pre-wrap ${lang === 'my' ? 'text-lg' : 'text-base'}`}>
-                  {selectedAudio.explanation || (lang === 'my' ? "ရှင်းလင်းချက် မရှိသေးပါ။" : "No explanation available yet.")}
-                </div>
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-3">
-                <button 
-                  onClick={() => listenNow(selectedAudio)}
-                  className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-[#B8860B] text-white rounded-2xl font-bold shadow-lg hover:bg-[#9a700a] transition-all active-scale border border-[#FCF6BA]/30"
-                >
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd"/></svg>
-                  {t.listenNow}
-                </button>
-                {selectedAudio.downloadUrl && (
-                  <a 
-                    href={selectedAudio.downloadUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-white/5 text-white/80 rounded-2xl font-bold shadow-lg hover:bg-white/10 transition-all active-scale border border-white/10"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                    {t.download}
-                  </a>
-                )}
-                <button 
-                  onClick={() => setSelectedAudio(null)}
-                  className="px-6 py-4 bg-white/5 text-white/60 rounded-2xl font-bold hover:bg-white/10 transition-all active-scale border border-white/10"
-                >
-                  {t.close}
-                </button>
-              </div>
-            </div>
-          </div>
+      {successMessage && (
+        <div 
+          className="fixed bottom-10 left-1/2 -translate-x-1/2 bg-teal-900 text-white px-6 py-4 rounded-2xl shadow-2xl z-[200] animate-fade-in font-bold text-xs" 
+          role="status"
+          aria-live="polite"
+        >
+          {successMessage}
         </div>
       )}
 
-      {/* iOS Install Modal */}
-      {showIosModal && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="glass-card w-full max-w-sm rounded-[2.5rem] p-8 border-2 border-[#D4AF37]/40 relative overflow-hidden shadow-2xl text-center">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/5 rounded-full -mr-16 -mt-16" aria-hidden="true"></div>
-            <div className="relative z-10">
-              <div className="w-16 h-16 bg-[#B8860B]/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                <svg className="w-8 h-8 text-[#B8860B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
-                </svg>
-              </div>
-              <h3 className="text-xl font-bold gold-text mb-4">{t.iosInstallTitle}</h3>
-              <p className="text-white/80 text-sm leading-relaxed mb-8">
-                {t.iosInstallDesc}
-              </p>
-              <button 
-                onClick={() => setShowIosModal(false)}
-                className="w-full py-4 bg-[#B8860B] text-white rounded-2xl font-bold shadow-lg hover:bg-[#9a700a] transition-all active-scale border border-[#FCF6BA]/30"
-              >
-                {t.close}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Suspense fallback={null}>
+        {/* Explanation Modal */}
+        {selectedAudio && (
+          <ExplanationModal 
+            selectedAudio={selectedAudio}
+            lang={lang}
+            t={t}
+            onClose={() => setSelectedAudio(null)}
+            onListenNow={listenNow}
+          />
+        )}
 
-      {/* Android Install Modal */}
-      {showAndroidModal && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="glass-card w-full max-w-sm rounded-[2.5rem] p-8 border-2 border-[#D4AF37]/40 relative overflow-hidden shadow-2xl text-center">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/5 rounded-full -mr-16 -mt-16" aria-hidden="true"></div>
-            <div className="relative z-10">
-              <div className="w-16 h-16 bg-[#B8860B]/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                <svg className="w-8 h-8 text-[#B8860B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-bold gold-text mb-4">{t.iosInstallTitle}</h3>
-              <p className="text-white/80 text-sm leading-relaxed mb-8">
-                {t.androidInstallDesc}
-              </p>
-              <button 
-                onClick={() => setShowAndroidModal(false)}
-                className="w-full py-4 bg-[#B8860B] text-white rounded-2xl font-bold shadow-lg hover:bg-[#9a700a] transition-all active-scale border border-[#FCF6BA]/30"
-              >
-                {t.close}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+        {/* iOS Install Modal */}
+        {showIosModal && (
+          <InstallModal 
+            type="ios"
+            t={t}
+            onClose={() => setShowIosModal(false)}
+          />
+        )}
 
-      {/* Admin PIN Modal */}
-      {showPinModal && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
-          <div className="glass-card w-full max-w-sm rounded-[2.5rem] p-8 border-2 border-[#D4AF37]/40 relative overflow-hidden shadow-2xl text-center">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/5 rounded-full -mr-16 -mt-16" aria-hidden="true"></div>
-            <div className="relative z-10">
-              <div className="w-16 h-16 bg-[#B8860B]/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                <svg className="w-8 h-8 text-[#B8860B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-                </svg>
-              </div>
-              <h3 className="text-xl font-bold gold-text mb-2">{t.adminPinTitle}</h3>
-              <p className="text-white/60 text-xs mb-6">{t.adminPinDesc}</p>
-              
-              <form onSubmit={handlePinSubmit} className="space-y-4">
-                <input 
-                  type="password"
-                  value={pinInput}
-                  onChange={(e) => { setPinInput(e.target.value); setPinError(false); }}
-                  placeholder={t.enterPin}
-                  className={`w-full bg-white/5 border ${pinError ? 'border-red-500' : 'border-white/20'} rounded-2xl px-4 py-4 text-center text-white text-xl tracking-[0.5em] focus:outline-none focus:border-[#D4AF37] transition-all`}
-                  autoFocus
-                />
-                {pinError && <p className="text-red-500 text-[10px] font-bold uppercase tracking-widest">{t.invalidPin}</p>}
-                
-                <div className="flex gap-3">
-                  <button 
-                    type="button"
-                    onClick={() => setShowPinModal(false)}
-                    className="flex-1 py-4 bg-white/5 text-white/60 rounded-2xl font-bold hover:bg-white/10 transition-all active-scale border border-white/10"
-                  >
-                    {t.close}
-                  </button>
-                  <button 
-                    type="submit"
-                    className="flex-[2] py-4 bg-[#B8860B] text-white rounded-2xl font-bold shadow-lg hover:bg-[#9a700a] transition-all active-scale border border-[#FCF6BA]/30"
-                  >
-                    {t.submit}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
+        {/* Android Install Modal */}
+        {showAndroidModal && (
+          <InstallModal 
+            type="android"
+            t={t}
+            onClose={() => setShowAndroidModal(false)}
+          />
+        )}
+
+        {/* Admin PIN Modal */}
+        {showPinModal && (
+          <AdminPinModal 
+            pinInput={pinInput}
+            pinError={pinError}
+            t={t}
+            onPinChange={(val) => { setPinInput(val); setPinError(false); }}
+            onSubmit={handlePinSubmit}
+            onClose={() => setShowPinModal(false)}
+          />
+        )}
+      </Suspense>
 
       {/* Floating Action Dock (Better Idea for Mobile) */}
-      <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[90] w-[90%] max-w-md">
-        <div className="glass-card rounded-full p-2 border-2 border-[#D4AF37]/30 shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex items-center justify-between gap-2 backdrop-blur-xl bg-black/40">
-          {!isStandalone && (
-            <button 
-              onClick={handleInstallClick}
-              className="flex-1 bg-white/5 hover:bg-white/10 p-3 rounded-full flex flex-col items-center justify-center gap-1 transition-all active:scale-90 border border-white/10"
-              title={t.installApp}
-            >
-              <svg className="w-5 h-5 text-[#B8860B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-              </svg>
-              <span className="text-[8px] font-bold text-white/60 uppercase tracking-tighter">Install</span>
-            </button>
-          )}
-          
-          <button 
-            onClick={() => setLang(lang === 'my' ? 'en' : 'my')} 
-            className="flex-1 bg-white/5 hover:bg-white/10 p-3 rounded-full flex flex-col items-center justify-center gap-1 transition-all active:scale-90 border border-white/10 relative group"
-            title={lang === 'my' ? "Switch to English" : "မြန်မာဘာသာသို့ ပြောင်းရန်"}
-          >
-            <div className="relative">
-              <svg className="w-5 h-5 text-white/80 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
-              </svg>
-              <span className="absolute -top-1 -right-1 flex h-3 w-3 items-center justify-center rounded-full bg-[#B8860B] text-[6px] font-bold text-white ring-1 ring-black/50">
-                {lang === 'my' ? 'MY' : 'EN'}
-              </span>
+          <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[90] w-[90%] max-w-md" aria-label="Main Navigation">
+            <div className="glass-card rounded-full p-2 border-2 border-[#D4AF37]/30 shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex items-center justify-between gap-2 backdrop-blur-xl bg-black/40">
+              {!isStandalone && (
+                <button 
+                  onClick={handleInstallClick}
+                  className="flex-1 bg-white/5 hover:bg-white/10 p-3 rounded-full flex flex-col items-center justify-center gap-1 transition-all active:scale-90 border border-white/10"
+                  title={t.installApp}
+                  aria-label={t.installApp}
+                >
+                  <svg className="w-5 h-5 text-[#B8860B]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                  </svg>
+                  <span className="text-[8px] font-bold text-white/60 uppercase tracking-tighter">Install</span>
+                </button>
+              )}
+              
+              <button 
+                onClick={() => setLang(lang === 'my' ? 'en' : 'my')} 
+                className="flex-1 bg-white/5 hover:bg-white/10 p-3 rounded-full flex flex-col items-center justify-center gap-1 transition-all active:scale-90 border border-white/10 relative group"
+                title={lang === 'my' ? "Switch to English" : "မြန်မာဘာသာသို့ ပြောင်းရန်"}
+                aria-label={lang === 'my' ? "Switch to English" : "မြန်မာဘာသာသို့ ပြောင်းရန်"}
+              >
+                <div className="relative">
+                  <svg className="w-5 h-5 text-white/80 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                  </svg>
+                  <span className="absolute -top-1 -right-1 flex h-3 w-3 items-center justify-center rounded-full bg-[#B8860B] text-[6px] font-bold text-white ring-1 ring-black/50">
+                    {lang === 'my' ? 'MY' : 'EN'}
+                  </span>
+                </div>
+                <span className="text-[8px] font-bold text-white/60 uppercase tracking-tighter">Language</span>
+              </button>
+    
+              <button 
+                onClick={() => handleAdminLinkClick(SHEET_URL)} 
+                className="flex-1 bg-white/5 hover:bg-white/10 p-3 rounded-full flex flex-col items-center justify-center gap-1 transition-all active:scale-90 border border-white/10"
+                title={t.googleSheet}
+                aria-label={t.googleSheet}
+              >
+                <svg className="w-5 h-5 text-white/80" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2zM19 19H5V4h8v4h4v11zM7 10h10v2H7v-2zm0 4h10v2H7v-2z"/></svg>
+                <span className="text-[8px] font-bold text-white/60 uppercase tracking-tighter">Sheet</span>
+              </button>
+    
+              <button 
+                onClick={() => handleAdminLinkClick(DRIVE_FOLDER_URL)} 
+                className="flex-1 bg-[#B8860B] hover:bg-[#9a700a] p-3 rounded-full flex flex-col items-center justify-center gap-1 transition-all active:scale-95 border border-[#FCF6BA]/30 shadow-lg"
+                title={t.fullLibrary}
+                aria-label={t.fullLibrary}
+              >
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                <span className="text-[8px] font-bold text-white uppercase tracking-tighter">Library</span>
+              </button>
             </div>
-            <span className="text-[8px] font-bold text-white/60 uppercase tracking-tighter">Language</span>
-          </button>
-
-          <button 
-            onClick={() => handleAdminLinkClick(SHEET_URL)} 
-            className="flex-1 bg-white/5 hover:bg-white/10 p-3 rounded-full flex flex-col items-center justify-center gap-1 transition-all active:scale-90 border border-white/10"
-            title={t.googleSheet}
-          >
-            <svg className="w-5 h-5 text-white/80" fill="currentColor" viewBox="0 0 24 24"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2zM19 19H5V4h8v4h4v11zM7 10h10v2H7v-2zm0 4h10v2H7v-2z"/></svg>
-            <span className="text-[8px] font-bold text-white/60 uppercase tracking-tighter">Sheet</span>
-          </button>
-
-          <button 
-            onClick={() => handleAdminLinkClick(DRIVE_FOLDER_URL)} 
-            className="flex-1 bg-[#B8860B] hover:bg-[#9a700a] p-3 rounded-full flex flex-col items-center justify-center gap-1 transition-all active:scale-95 border border-[#FCF6BA]/30 shadow-lg"
-            title={t.fullLibrary}
-          >
-            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-            <span className="text-[8px] font-bold text-white uppercase tracking-tighter">Library</span>
-          </button>
-        </div>
-      </nav>
+          </nav>
 
       <footer className="mt-12 text-center pb-8 opacity-40 border-t border-gray-200 pt-8">
         <p className="text-[10px] tracking-[0.3em] font-bold text-teal-900/60 uppercase">Mindful Project / {new Date().getFullYear()}</p>
