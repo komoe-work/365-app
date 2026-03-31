@@ -247,7 +247,7 @@ const App: React.FC = () => {
     iosInstallDesc: lang === 'my' ? "App ထည့်သွင်းရန်: သင့်ဖုန်း၏ Share icon ကိုနှိပ်ပြီး 'Add to Home Screen' ကိုရွေးချယ်ပါ။" : "To install: Tap the Share icon at the bottom of your screen, then select 'Add to Home Screen'.",
     androidInstallDesc: lang === 'my' ? "App ထည့်သွင်းရန်: ဘရောက်ဇာမီနူး (အစက်သုံးစက်) ကိုနှိပ်ပြီး 'Install app' သို့မဟုတ် 'Add to Home screen' ကိုရွေးချယ်ပါ။" : "To install: Tap the browser menu (three dots) at the top right, then select 'Install app' or 'Add to Home screen'.",
     upNext: lang === 'my' ? "နောက်ထပ် နာယူရန်" : "Up Next",
-    continueJourney: lang === 'my' ? "သင်၏ခရီးကို ဆက်လက်လျှောက်လှမ်းပါ" : "Continue your journey",
+    continueJourney: lang === 'my' ? "ဓမ္မလမ်း ကို ဆက်လက်လျှောက်လှမ်းပါ" : "Continue your journey",
     adminPinTitle: lang === 'my' ? "Admin Access လိုအပ်ပါသည်" : "Admin Access Required",
     adminPinDesc: lang === 'my' ? "ဤလင့်ခ်ကို ကြည့်ရှုရန် PIN ကုဒ် ရိုက်ထည့်ပါ" : "Enter PIN code to access this link",
     enterPin: lang === 'my' ? "PIN ကုဒ် ရိုက်ထည့်ပါ" : "Enter PIN Code",
@@ -317,15 +317,15 @@ const App: React.FC = () => {
   }, [isMobile]);
 
   return (
-    <main id="main-content" className={`max-w-2xl mx-auto px-4 py-6 md:py-12 relative pb-24 ${lang === 'my' ? 'lang-my' : ''}`}>
+    <main id="main-content" className={`max-w-2xl mx-auto px-4 py-4 md:py-12 relative pb-24 ${lang === 'my' ? 'lang-my' : ''}`}>
       <motion.header 
-        className="text-center mb-16 relative pt-12"
+        className="text-center mb-6 md:mb-16 relative pt-4 md:pt-12"
         {...animationProps}
       >
         <img 
           src={logoUrl} 
           alt="Dhammalann Logo" 
-          className="w-24 h-24 mx-auto mb-6 drop-shadow-2xl rounded-2xl"
+          className="w-16 h-16 md:w-24 md:h-24 mx-auto mb-4 md:mb-6 drop-shadow-2xl rounded-2xl"
           fetchPriority="high"
           referrerPolicy="no-referrer"
         />
