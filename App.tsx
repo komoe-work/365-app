@@ -4,6 +4,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { AudioGuide } from './types';
 import { meditationItems, getDriveUrl, getDownloadUrl } from './data/meditationData';
 import logoUrl from './public/icon.svg';
+import AudioCard from './components/AudioCard';
+import BottomNavDock from './components/BottomNavDock';
+import AudioListContainer from './components/AudioListContainer';
 
 // Lazy load non-critical components
 const ExplanationModal = lazy(() => import('./components/ExplanationModal'));
@@ -342,52 +345,14 @@ const App: React.FC = () => {
               <p className="text-teal-100/70 text-xs italic">{t.audioSubtitle}</p>
             </div>
           </div>
-          <div className="max-h-[500px] overflow-y-auto pr-2 -mr-2 custom-scrollbar">
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
-              {audioGuides.map((guide) => (
-                <div key={guide.id} className="relative group">
-                  {/* Main Action: Play Audio */}
-                  <button 
-                    onClick={() => playAudio(guide)} 
-                    className={`w-full flex flex-col items-center justify-center pt-7 pb-4 rounded-2xl transition-all border-2 active-scale relative ${guide.isCompleted ? 'bg-[#D4AF37]/10 border-[#D4AF37]/30' : 'bg-white/5 border-white/10 hover:border-white/30 hover:bg-white/10'} ${guide.id === firstUncompletedId ? 'ring-2 ring-[#D4AF37] ring-offset-2 ring-offset-[#051a12]' : ''}`}
-                    aria-label={`${t.play} ${t.dayLabel} ${guide.id}`}
-                  >
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 transition-all ${guide.audioUrl ? 'bg-[#B8860B] text-white shadow-xl group-hover:scale-110' : 'bg-white/10 text-white/40'}`}>
-                      {guide.audioUrl ? (
-                        <svg className="w-6 h-6 ml-1" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd"/></svg>
-                      ) : (
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
-                      )}
-                    </div>
-                    <span className="text-[10px] font-bold text-white/90 uppercase tracking-widest">{t.dayLabel} {guide.id}</span>
-                  </button>
-
-                  {/* Secondary Action: Toggle Done */}
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); toggleAudio(guide.id); }}
-                    className={`absolute -top-2 -right-2 w-8 h-8 rounded-full shadow-lg transition-all active:scale-90 z-20 flex items-center justify-center border-2 ${guide.isCompleted ? 'bg-[#B8860B] border-[#FCF6BA]/50 text-white' : 'bg-[#051a12] border-white/40 text-white/70 hover:text-white hover:border-white/60'}`}
-                    title={guide.isCompleted ? "Mark as Unfinished" : "Mark as Done"}
-                    aria-label={guide.isCompleted ? "Mark as Unfinished" : "Mark as Done"}
-                  >
-                    {guide.isCompleted ? (
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
-                    ) : (
-                      <span className="text-[10px] font-bold">{guide.id}</span>
-                    )}
-                  </button>
-
-                  {/* Custom Tooltip for Filename */}
-                  {(guide.fileName || guide.date) && (
-                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-teal-900 text-white text-[10px] px-3 py-2 rounded-xl z-50 whitespace-normal min-w-[150px] max-w-[250px] text-center shadow-2xl pointer-events-none animate-fade-in border border-white/10">
-                      {guide.fileName && <div className="font-bold mb-1">{guide.fileName}</div>}
-                      {guide.date && <div className="opacity-60 mb-1">{guide.date}</div>}
-                      <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-teal-900"></div>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
+          <AudioListContainer 
+            audioGuides={audioGuides}
+            onPlay={playAudio}
+            onToggleDone={toggleAudio}
+            firstUncompletedId={firstUncompletedId}
+            t={t}
+            lang={lang}
+          />
         </div>
       </motion.section>
 
@@ -499,61 +464,16 @@ const App: React.FC = () => {
         )}
       </Suspense>
 
-      {/* Floating Action Dock (Better Idea for Mobile) */}
-          <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[90] w-[90%] max-w-md" aria-label="Main Navigation">
-            <div className="glass-card rounded-full p-2 border-2 border-[#D4AF37]/30 shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex items-center justify-between gap-2 backdrop-blur-xl bg-black/40">
-              {!isStandalone && (
-                <button 
-                  onClick={handleInstallClick}
-                  className="flex-1 bg-white/5 hover:bg-white/10 p-3 rounded-full flex flex-col items-center justify-center gap-1 transition-all active:scale-90 border border-white/10"
-                  title={t.installApp}
-                  aria-label={t.installApp}
-                >
-                  <svg className="w-5 h-5 text-[#B8860B]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                  </svg>
-                  <span className="text-[8px] font-bold text-white/60 uppercase tracking-tighter">Install</span>
-                </button>
-              )}
-              
-              <button 
-                onClick={() => setLang(lang === 'my' ? 'en' : 'my')} 
-                className="flex-1 bg-white/5 hover:bg-white/10 p-3 rounded-full flex flex-col items-center justify-center gap-1 transition-all active:scale-90 border border-white/10 relative group"
-                title={lang === 'my' ? "Switch to English" : "မြန်မာဘာသာသို့ ပြောင်းရန်"}
-                aria-label={lang === 'my' ? "Switch to English" : "မြန်မာဘာသာသို့ ပြောင်းရန်"}
-              >
-                <div className="relative">
-                  <svg className="w-5 h-5 text-white/80 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
-                  </svg>
-                  <span className="absolute -top-1 -right-1 flex h-3 w-3 items-center justify-center rounded-full bg-[#B8860B] text-[6px] font-bold text-white ring-1 ring-black/50">
-                    {lang === 'my' ? 'MY' : 'EN'}
-                  </span>
-                </div>
-                <span className="text-[8px] font-bold text-white/60 uppercase tracking-tighter">Language</span>
-              </button>
-    
-              <button 
-                onClick={() => handleAdminLinkClick(SHEET_URL)} 
-                className="flex-1 bg-white/5 hover:bg-white/10 p-3 rounded-full flex flex-col items-center justify-center gap-1 transition-all active:scale-90 border border-white/10"
-                title={t.googleSheet}
-                aria-label={t.googleSheet}
-              >
-                <svg className="w-5 h-5 text-white/80" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2zM19 19H5V4h8v4h4v11zM7 10h10v2H7v-2zm0 4h10v2H7v-2z"/></svg>
-                <span className="text-[8px] font-bold text-white/60 uppercase tracking-tighter">Sheet</span>
-              </button>
-    
-              <button 
-                onClick={() => handleAdminLinkClick(DRIVE_FOLDER_URL)} 
-                className="flex-1 bg-[#B8860B] hover:bg-[#9a700a] p-3 rounded-full flex flex-col items-center justify-center gap-1 transition-all active:scale-95 border border-[#FCF6BA]/30 shadow-lg"
-                title={t.fullLibrary}
-                aria-label={t.fullLibrary}
-              >
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-                <span className="text-[8px] font-bold text-white uppercase tracking-tighter">Library</span>
-              </button>
-            </div>
-          </nav>
+      <BottomNavDock 
+        isStandalone={isStandalone}
+        handleInstallClick={handleInstallClick}
+        lang={lang}
+        setLang={setLang}
+        handleAdminLinkClick={handleAdminLinkClick}
+        t={t}
+        SHEET_URL={SHEET_URL}
+        DRIVE_FOLDER_URL={DRIVE_FOLDER_URL}
+      />
 
       <footer className="mt-12 text-center pb-8 opacity-40 border-t border-gray-200 pt-8">
         <p className="text-[10px] tracking-[0.3em] font-bold text-teal-900/60 uppercase">Mindful Project / {new Date().getFullYear()}</p>
