@@ -58,6 +58,7 @@ const AudioListContainer: React.FC<AudioListContainerProps> = ({
         const myMonthNumber = toMyanmarDigits(monthNumber);
         const completedCount = monthItems.filter(item => item.isCompleted).length;
         const totalCount = monthItems.length;
+        const progressPercentage = (completedCount / totalCount) * 100;
         const isFullyCompleted = completedCount === totalCount;
 
         return (
@@ -72,25 +73,37 @@ const AudioListContainer: React.FC<AudioListContainerProps> = ({
             {/* Month Header */}
             <button
               onClick={() => toggleMonth(index)}
-              className="w-full px-6 py-4 flex items-center justify-between text-left group"
+              className="w-full px-6 py-5 flex items-center justify-between text-left group relative"
             >
-              <div className="flex items-center gap-4">
-                <div className={`w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-sm transition-all ${
+              <div className="flex items-center gap-5">
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-base transition-all ${
                   isFullyCompleted 
-                    ? 'bg-[#B8860B] text-white shadow-lg' 
+                    ? 'bg-[#B8860B] text-white shadow-[0_0_15px_rgba(184,134,11,0.4)]' 
                     : 'bg-white/10 text-white/60 group-hover:bg-white/20'
                 }`}>
                   {lang === 'my' ? myMonthNumber : monthNumber}
                 </div>
-                <div>
-                  <h3 className={`font-bold transition-colors ${isOpen ? 'gold-text' : 'text-white/90'}`}>
+                <div className="flex-1 min-w-[140px]">
+                  <h3 className={`text-lg font-bold transition-colors ${isOpen ? 'gold-text' : 'text-white/90'}`}>
                     {lang === 'my' ? `${myMonthNumber} လ` : `Month ${monthNumber}`}
                   </h3>
-                  <p className="text-[10px] text-white/40 uppercase tracking-widest mt-0.5">
-                    {lang === 'my' 
-                      ? `${toMyanmarDigits(completedCount)} / ${toMyanmarDigits(totalCount)} ပြီးစီးမှု` 
-                      : `${completedCount} / ${totalCount} Completed`}
-                  </p>
+                  
+                  <div className="mt-2 space-y-1.5">
+                    <p className="text-[10px] text-white/50 uppercase tracking-[0.15em] font-bold">
+                      {lang === 'my' 
+                        ? `${toMyanmarDigits(completedCount)} / ${toMyanmarDigits(totalCount)} ပြီးစီးမှု` 
+                        : `${completedCount} / ${totalCount} Days Completed`}
+                    </p>
+                    {/* Progress Bar Container */}
+                    <div className="h-1 w-full bg-white/10 rounded-full overflow-hidden">
+                      <motion.div 
+                        initial={{ width: 0 }}
+                        animate={{ width: `${progressPercentage}%` }}
+                        transition={{ duration: 1, ease: "easeOut" }}
+                        className="h-full bg-[#B8860B] shadow-[0_0_8px_rgba(184,134,11,0.6)]"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
               

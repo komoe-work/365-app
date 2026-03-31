@@ -7,6 +7,7 @@ import logoUrl from './public/icon.svg';
 import AudioCard from './components/AudioCard';
 import BottomNavDock from './components/BottomNavDock';
 import AudioListContainer from './components/AudioListContainer';
+import UpNextCard from './components/UpNextCard';
 
 // Lazy load non-critical components
 const ExplanationModal = lazy(() => import('./components/ExplanationModal'));
@@ -245,6 +246,8 @@ const App: React.FC = () => {
     iosInstallTitle: lang === 'my' ? "App ထည့်သွင်းနည်း" : "How to Install",
     iosInstallDesc: lang === 'my' ? "App ထည့်သွင်းရန်: သင့်ဖုန်း၏ Share icon ကိုနှိပ်ပြီး 'Add to Home Screen' ကိုရွေးချယ်ပါ။" : "To install: Tap the Share icon at the bottom of your screen, then select 'Add to Home Screen'.",
     androidInstallDesc: lang === 'my' ? "App ထည့်သွင်းရန်: ဘရောက်ဇာမီနူး (အစက်သုံးစက်) ကိုနှိပ်ပြီး 'Install app' သို့မဟုတ် 'Add to Home screen' ကိုရွေးချယ်ပါ။" : "To install: Tap the browser menu (three dots) at the top right, then select 'Install app' or 'Add to Home screen'.",
+    upNext: lang === 'my' ? "နောက်ထပ် နာယူရန်" : "Up Next",
+    continueJourney: lang === 'my' ? "သင်၏ခရီးကို ဆက်လက်လျှောက်လှမ်းပါ" : "Continue your journey",
     adminPinTitle: lang === 'my' ? "Admin Access လိုအပ်ပါသည်" : "Admin Access Required",
     adminPinDesc: lang === 'my' ? "ဤလင့်ခ်ကို ကြည့်ရှုရန် PIN ကုဒ် ရိုက်ထည့်ပါ" : "Enter PIN code to access this link",
     enterPin: lang === 'my' ? "PIN ကုဒ် ရိုက်ထည့်ပါ" : "Enter PIN Code",
@@ -298,6 +301,7 @@ const App: React.FC = () => {
   }, [deferredPrompt]);
 
   const firstUncompletedId = useMemo(() => audioGuides.find(g => !g.isCompleted)?.id, [audioGuides]);
+  const nextAudio = useMemo(() => audioGuides.find(g => !g.isCompleted), [audioGuides]);
 
   const animationProps = useMemo(() => {
     if (isMobile) return {
@@ -330,6 +334,13 @@ const App: React.FC = () => {
         </h1>
         <div className="h-0.5 w-10 bg-[#B8860B] mx-auto rounded-full opacity-30" aria-hidden="true"></div>
       </motion.header>
+
+      <UpNextCard 
+        nextAudio={nextAudio}
+        onPlay={playAudio}
+        t={t}
+        lang={lang}
+      />
 
       {/* Audio Section - PRIMARY FOCUS */}
       <motion.section 
