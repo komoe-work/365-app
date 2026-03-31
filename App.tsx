@@ -3,6 +3,7 @@ import React, { useState, useEffect, Suspense, lazy, useMemo, useCallback } from
 import { motion, AnimatePresence } from 'framer-motion';
 import { AudioGuide } from './types';
 import { meditationItems, getDriveUrl, getDownloadUrl } from './data/meditationData';
+import logoUrl from './public/icon.svg';
 
 // Lazy load non-critical components
 const ExplanationModal = lazy(() => import('./components/ExplanationModal'));
@@ -315,7 +316,7 @@ const App: React.FC = () => {
         {...animationProps}
       >
         <img 
-          src="icon-192.png" 
+          src={logoUrl} 
           alt="Dhammalann Logo" 
           className="w-24 h-24 mx-auto mb-6 drop-shadow-2xl rounded-2xl"
           fetchPriority="high"
@@ -451,7 +452,11 @@ const App: React.FC = () => {
         )}
       </AnimatePresence>
 
-      <Suspense fallback={null}>
+      <Suspense fallback={
+        <div className="fixed inset-0 flex items-center justify-center z-[300] bg-black/20 backdrop-blur-sm">
+          <div className="w-10 h-10 border-4 border-[#D4AF37] border-t-transparent rounded-full animate-spin shadow-lg"></div>
+        </div>
+      }>
         {/* Explanation Modal */}
         {selectedAudio && (
           <ExplanationModal 
