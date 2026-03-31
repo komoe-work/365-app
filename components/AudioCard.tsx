@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { AudioGuide } from '../types';
 
 interface AudioCardProps {
@@ -74,18 +74,47 @@ const AudioCard: React.FC<AudioCardProps> = ({
         title={guide.isCompleted ? "Mark as Unfinished" : "Mark as Done"}
         aria-label={guide.isCompleted ? "Mark as Unfinished" : "Mark as Done"}
       >
-        <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all ${
+        <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all relative ${
           guide.isCompleted 
             ? 'bg-[#B8860B] border-[#FCF6BA]/50' 
             : 'bg-[#051a12] border-white/40 group-hover/toggle:border-white/60'
         }`}>
-          {guide.isCompleted ? (
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
-            </svg>
-          ) : (
-            <span className="text-[10px] font-bold">{guide.id}</span>
-          )}
+          <AnimatePresence mode="wait">
+            {guide.isCompleted ? (
+              <motion.div
+                key="completed"
+                initial={{ scale: 0.5, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+              >
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                </svg>
+              </motion.div>
+            ) : (
+              <motion.span 
+                key="id"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-[10px] font-bold"
+              >
+                {guide.id}
+              </motion.span>
+            )}
+          </AnimatePresence>
+
+          {/* Ripple Effect when completed */}
+          <AnimatePresence>
+            {guide.isCompleted && (
+              <motion.div
+                initial={{ scale: 0.8, opacity: 1 }}
+                animate={{ scale: 2.5, opacity: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.6, ease: "easeOut" }}
+                className="absolute inset-0 rounded-full border-2 border-[#D4AF37] pointer-events-none"
+              />
+            )}
+          </AnimatePresence>
         </div>
       </motion.button>
 

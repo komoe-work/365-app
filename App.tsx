@@ -8,6 +8,7 @@ import AudioCard from './components/AudioCard';
 import BottomNavDock from './components/BottomNavDock';
 import AudioListContainer from './components/AudioListContainer';
 import UpNextCard from './components/UpNextCard';
+import StickyMiniPlayer from './components/StickyMiniPlayer';
 
 // Lazy load non-critical components
 const ExplanationModal = lazy(() => import('./components/ExplanationModal'));
@@ -41,6 +42,7 @@ const App: React.FC = () => {
   const [audioGuides, setAudioGuides] = useState<AudioGuide[]>(meditationItems);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [selectedAudio, setSelectedAudio] = useState<AudioGuide | null>(null);
+  const [currentlyPlayingAudio, setCurrentlyPlayingAudio] = useState<AudioGuide | null>(null);
   
   const [hasScrolled, setHasScrolled] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -215,6 +217,7 @@ const App: React.FC = () => {
 
   const playAudio = useCallback((guide: AudioGuide) => {
     setSelectedAudio(guide);
+    setCurrentlyPlayingAudio(guide);
   }, []);
 
   const listenNow = useCallback((guide: AudioGuide) => {
@@ -248,6 +251,7 @@ const App: React.FC = () => {
     androidInstallDesc: lang === 'my' ? "App ထည့်သွင်းရန်: ဘရောက်ဇာမီနူး (အစက်သုံးစက်) ကိုနှိပ်ပြီး 'Install app' သို့မဟုတ် 'Add to Home screen' ကိုရွေးချယ်ပါ။" : "To install: Tap the browser menu (three dots) at the top right, then select 'Install app' or 'Add to Home screen'.",
     upNext: lang === 'my' ? "နောက်ထပ် နာယူရန်" : "Up Next",
     continueJourney: lang === 'my' ? "ဓမ္မလမ်း ကို ဆက်လက်လျှောက်လှမ်းပါ" : "Continue your journey",
+    streakLabel: lang === 'my' ? "ရက်ဆက်တိုက်" : "Day Streak",
     adminPinTitle: lang === 'my' ? "Admin Access လိုအပ်ပါသည်" : "Admin Access Required",
     adminPinDesc: lang === 'my' ? "ဤလင့်ခ်ကို ကြည့်ရှုရန် PIN ကုဒ် ရိုက်ထည့်ပါ" : "Enter PIN code to access this link",
     enterPin: lang === 'my' ? "PIN ကုဒ် ရိုက်ထည့်ပါ" : "Enter PIN Code",
@@ -302,6 +306,17 @@ const App: React.FC = () => {
 
   const firstUncompletedId = useMemo(() => audioGuides.find(g => !g.isCompleted)?.id, [audioGuides]);
   const nextAudio = useMemo(() => audioGuides.find(g => !g.isCompleted), [audioGuides]);
+  const currentStreak = useMemo(() => {
+    let streak = 0;
+    for (const guide of audioGuides) {
+      if (guide.isCompleted) {
+        streak++;
+      } else {
+        break;
+      }
+    }
+    return streak;
+  }, [audioGuides]);
 
   const animationProps = useMemo(() => {
     if (isMobile) return {
@@ -338,6 +353,7 @@ const App: React.FC = () => {
       <UpNextCard 
         nextAudio={nextAudio}
         onPlay={playAudio}
+        currentStreak={currentStreak}
         t={t}
         lang={lang}
       />
@@ -474,6 +490,12 @@ const App: React.FC = () => {
           />
         )}
       </Suspense>
+
+      <StickyMiniPlayer 
+        currentlyPlayingAudio={currentlyPlayingAudio}
+        onClose={() => setCurrentlyPlayingAudio(null)}
+        lang={lang}
+      />
 
       <BottomNavDock 
         isStandalone={isStandalone}

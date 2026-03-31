@@ -5,16 +5,18 @@ import { AudioGuide } from '../types';
 interface UpNextCardProps {
   nextAudio: AudioGuide | undefined;
   onPlay: (guide: AudioGuide) => void;
+  currentStreak: number;
   t: {
     play: string;
     dayLabel: string;
     upNext: string;
     continueJourney: string;
+    streakLabel: string;
   };
   lang: 'my' | 'en';
 }
 
-const UpNextCard: React.FC<UpNextCardProps> = ({ nextAudio, onPlay, t, lang }) => {
+const UpNextCard: React.FC<UpNextCardProps> = ({ nextAudio, onPlay, currentStreak, t, lang }) => {
   if (!nextAudio) return null;
 
   // Helper to convert numbers to Myanmar digits
@@ -24,6 +26,7 @@ const UpNextCard: React.FC<UpNextCardProps> = ({ nextAudio, onPlay, t, lang }) =
   };
 
   const dayDisplay = lang === 'my' ? toMyanmarDigits(nextAudio.id) : nextAudio.id;
+  const streakDisplay = lang === 'my' ? toMyanmarDigits(currentStreak) : currentStreak;
 
   return (
     <motion.div
@@ -42,12 +45,27 @@ const UpNextCard: React.FC<UpNextCardProps> = ({ nextAudio, onPlay, t, lang }) =
 
         <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-4 md:gap-8">
           <div className="text-center md:text-left space-y-2 md:space-y-4">
-            <div className="inline-flex items-center gap-2 px-3 py-1 md:px-4 md:py-1.5 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#D4AF37] text-[8px] md:text-[10px] font-bold uppercase tracking-[0.2em]">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#D4AF37] opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#D4AF37]"></span>
-              </span>
-              {t.upNext}
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
+              <div className="inline-flex items-center gap-2 px-3 py-1 md:px-4 md:py-1.5 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#D4AF37] text-[8px] md:text-[10px] font-bold uppercase tracking-[0.2em]">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#D4AF37] opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[#D4AF37]"></span>
+                </span>
+                {t.upNext}
+              </div>
+
+              {currentStreak > 0 && (
+                <motion.div 
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className="inline-flex items-center gap-1.5 px-3 py-1 md:px-4 md:py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-orange-500/30 shadow-[0_0_15px_rgba(249,115,22,0.2)]"
+                >
+                  <span className="text-sm md:text-base">🔥</span>
+                  <span className="text-[10px] md:text-xs font-black bg-gradient-to-r from-orange-400 to-yellow-400 bg-clip-text text-transparent uppercase tracking-wider">
+                    {lang === 'my' ? `${streakDisplay} ${t.streakLabel}` : `${streakDisplay} ${t.streakLabel}`}
+                  </span>
+                </motion.div>
+              )}
             </div>
             
             <div className="space-y-0.5 md:space-y-1">
